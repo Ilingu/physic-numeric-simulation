@@ -20,6 +20,37 @@ impl System<RCState> for RC {
     }
 }
 
+type RLCSinusState = Vector2<f64>;
+
+struct RLCSinus {
+    w0: f64,
+    q: f64,
+    e1: f64,
+    e2: f64,
+    pulse: f64,
+}
+
+impl RLCSinus {
+    fn new(e1: f64, e2: f64, pulse: f64, r: f64, c: f64, l: f64) -> Self {
+        Self {
+            w0: 1.0 / (l * c).sqrt(),
+            q: (r / 2.0) * (c / l).sqrt(),
+            e1,
+            e2,
+            pulse,
+        }
+    }
+}
+
+impl System<RLCSinusState> for RLCSinus {
+    fn system(&self, t: Time, y: &RLCSinusState, dy: &mut RLCSinusState) {
+        let w0_square = (self.w0) * (self.w0);
+        let e = self.e1 + self.e2 * (self.pulse * t).sin();
+        dy[0] = y[1];
+        dy[1] = w0_square * e - 2.0 * (self.q) * (self.w0) * y[1] - w0_square * y[0];
+    }
+}
+
 type RLCState = Vector2<f64>;
 
 struct RLC {
@@ -172,7 +203,46 @@ fn rlc4_2(n: usize, r: f64) {
     }
 }
 
+fn rlc_sinus4_3(n: usize, pulse: f64) {
+    let system = RLCSinus::new(3.0, 2.0, pulse, 25.0, 1.0e-7, 0.001);
+
+    let mut stepper = Dopri5::new(
+        system,
+        X_START,
+        X_END,
+        10_f64.powf(X_END.log10().round()) * 1.0 / n as f64,
+        RLCSinusState::new(0.0, 0.0),
+        1.0e-10,
+        1.0e-10,
+    );
+    let res = stepper.integrate();
+
+    // Handle result
+    match res {
+        Ok(stats) => {
+            println!("RLC Sinus:\n{stats}\n\n");
+
+            let (x_datas, y_datas) = (
+                stepper.x_out(),
+                stepper
+                    .y_out()
+                    .into_iter()
+                    .map(|m| m[0])
+                    .collect::<Vec<_>>(),
+            );
+            draw(
+                "./out/rlcsinus.png",
+                format!("4.3 rlc, ω={pulse}rad/s").as_str(),
+                (x_datas.clone(), y_datas),
+            )
+            .expect("Failed to draw");
+        }
+        Err(e) => panic!("Failed to integrate: {e:?}"),
+    }
+}
+
 fn main() {
     // rc4_1(10_usize.pow(4));
-    rlc4_2(5000, 15.0);
+    // rlc4_2(5000, 1000.0);
+    rlc_sinus4_3(2000, 25e3)
 }
