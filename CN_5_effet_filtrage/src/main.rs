@@ -2,6 +2,12 @@ mod fft;
 mod plot;
 mod utils;
 
+/*
+https://docs.rs/rustfft/latest/rustfft/
+https://howthefouriertransformworks.com/understanding-the-output-of-an-fft/
+https://phip1611.de/blog/frequency-spectrum-analysis-with-fft-in-rust/
+*/
+
 use std::ops::Range;
 
 use crate::{
