@@ -43,15 +43,23 @@ impl FiltreTrait for FiltrePasseHaut {
     fn phase_at(&self, f: f64) -> f64 {
         let pulsation = 2.0 * PI * f;
         let x = pulsation / self.omega0;
-        PI - if pulsation < self.omega0 {
+        let argh0 = if self.h0 < 0.0 {
+            0.0
+        } else if self.h0 > 0.0 {
+            PI
+        } else {
+            unreachable!("Arg(0) is not defined")
+        };
+        let phic = if pulsation < self.omega0 {
             -(x * (1.0 / self.q) / (1.0 - x)).atan()
         } else if pulsation > self.omega0 {
             -PI - (x * (1.0 / self.q) / (1.0 - x)).atan()
         } else if pulsation == self.omega0 {
             -PI / 2.0
         } else {
-            unreachable!()
-        }
+            unreachable!("w must be >0")
+        };
+        argh0 + phic
     }
 }
 
