@@ -57,7 +57,7 @@ pub fn draw_plot(
         .y_desc(legend_y)
         .draw()?;
 
-    const COLORS: [RGBColor; 7] = [BLACK, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA];
+    const COLORS: [RGBColor; 7] = [RED, GREEN, BLACK, BLUE, YELLOW, CYAN, MAGENTA];
     for (i, datas) in lines.iter().enumerate() {
         chart.draw_series(LineSeries::new(
             datas.iter().map(|&(x, y)| (x as f32, y as f32)),

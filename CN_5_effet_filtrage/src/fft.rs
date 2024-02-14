@@ -1,7 +1,9 @@
 use std::{f64::consts::PI, ops::Range};
 
 use find_peaks::PeakFinder;
-use rustfft::{num_complex::Complex, FftPlanner};
+use rustfft::FftPlanner;
+
+use crate::utils::xy_scatter_to_fft;
 
 pub type XyScatter = Vec<(f64, f64)>;
 
@@ -30,16 +32,60 @@ pub fn generate_signals(signals: Vec<(f64, f64)>) -> Box<dyn Fn(f64) -> f64> {
     })
 }
 
-pub fn compute_fft(fft_points: Vec<Complex<f64>>, width: Range<f64>) -> XyScatter {
+pub fn generate_square_wave(f: f64, minmax: Range<f64>) -> Box<dyn Fn(f64) -> f64> {
+    let period = 1.0 / f;
+    Box::new(move |x| {
+        if x % period < period / 2.0 {
+            minmax.start
+        } else {
+            minmax.end
+        }
+    })
+}
+
+pub fn generate_triangle_wave(f: f64, minmax: Range<f64>) -> Box<dyn Fn(f64) -> f64> {
+    let period = 1.0 / f;
+    Box::new(move |x| {
+        let t = x % period;
+        if t < period / 2.0 {
+            ((2.0 * (minmax.end - minmax.start)) / period) * t + minmax.start
+        } else {
+            ((2.0 * (minmax.start - minmax.end)) / period) * t + 2.0 * minmax.end - minmax.start
+        }
+    })
+}
+
+fn extract_peaks(fft_points: &XyScatter) -> XyScatter {
+    let only_amp = fft_points.iter().map(|(_, y)| *y).collect::<Vec<f64>>();
+    let fp = PeakFinder::new(&only_amp);
+
+    let peaks = fp.find_peaks();
+    peaks
+        .into_iter()
+        .filter_map(|p| {
+            let fftp = fft_points[p.middle_position()];
+            if fftp.1 < 1e-3 {
+                None
+            } else {
+                Some(fftp)
+            }
+        })
+        .collect()
+}
+
+pub fn compute_fft(points: &XyScatter, width: Range<f64>, with_peak: bool) -> XyScatter {
+    let complex_points = xy_scatter_to_fft(points);
+
     let mut planner = FftPlanner::<f64>::new();
-    let sampling_nb = fft_points.len(); // N
+    let sampling_nb = complex_points.len(); // N
+
     let fft = planner.plan_fft_forward(sampling_nb);
 
-    let mut buffer = fft_points;
+    let mut buffer = complex_points;
     fft.process(&mut buffer);
 
     let signal_window_size = width.end - width.start;
-    buffer
+    let fft_points = buffer
         .into_iter()
         .take(sampling_nb / 2 - 1)
         .enumerate()
@@ -49,16 +95,22 @@ pub fn compute_fft(fft_points: Vec<Complex<f64>>, width: Range<f64>) -> XyScatte
                 2.0 * c.norm() / (sampling_nb as f64),
             )
         })
-        .collect::<XyScatter>()
-}
+        .collect::<XyScatter>();
+    if !with_peak {
+        return fft_points;
+    }
 
-pub fn extract_peaks(fft_points: &XyScatter) -> XyScatter {
-    let only_amp = fft_points.iter().map(|(_, y)| *y).collect::<Vec<f64>>();
-    let fp = PeakFinder::new(&only_amp);
-
-    let peaks = fp.find_peaks();
-    peaks
-        .into_iter()
-        .map(|p| fft_points[p.middle_position()])
-        .collect()
+    let peaks = extract_peaks(&fft_points);
+    println!("{peaks:?}");
+    let peaks_points = fft_points
+        .iter()
+        .map(|&(x, y)| {
+            if peaks.contains(&(x, y)) {
+                (x, y)
+            } else {
+                (x, 0.0)
+            }
+        })
+        .collect::<XyScatter>();
+    peaks_points
 }
