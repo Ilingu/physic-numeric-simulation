@@ -9,6 +9,7 @@ pub fn draw_plot(
     caption: &str,
     width: Range<f64>,
     (legend_x, legend_y): (&str, &str),
+    size: Option<(u32, u32)>,
     lines: Vec<&XyScatter>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(lines.len() <= 7);
@@ -38,7 +39,7 @@ pub fn draw_plot(
     }
 
     let save_path = format!("./out/{filename}");
-    let root = BitMapBackend::new(&save_path, (600, 600)).into_drawing_area();
+    let root = BitMapBackend::new(&save_path, size.unwrap_or((600, 600))).into_drawing_area();
     root.fill(&WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)

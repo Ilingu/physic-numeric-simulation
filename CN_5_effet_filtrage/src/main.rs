@@ -1,4 +1,5 @@
 mod fft;
+mod filtrage;
 mod filtre;
 mod plot;
 mod utils;
@@ -12,15 +13,23 @@ https://phip1611.de/blog/frequency-spectrum-analysis-with-fft-in-rust/
 use std::ops::Range;
 
 use fft::generate_square_wave;
+use filtrage::filtrage;
 
 use crate::{
-    fft::{compute_fft, evaluation_point, generate_signals, generate_triangle_wave},
+    fft::{compute_fft, evaluation_point, generate_signal, generate_triangle_wave, FFTResult},
+    filtrage::draw_filtrage,
     filtre::{FiltrePasseBande, FiltrePasseBas, FiltrePasseHaut, FiltreRejecteur, FiltreTrait},
     plot::draw_plot,
 };
 
 fn main() {
-    plot_gain_phase()
+    const N: usize = 2_usize.pow(14) - 1;
+    const WIDTH: Range<f64> = 0.0..0.010;
+    let in_signal = generate_signal(vec![(200.0, 1.0, 0.0), (1800.0, 1.0, 0.0)]);
+    let passe_bas = FiltrePasseBas::new(1.0, 1000.0, 0.2);
+    let report = filtrage(&in_signal, &passe_bas, N, &WIDTH);
+    draw_filtrage(&report);
+    // fft_basic_test()
 }
 
 fn plot_gain_phase() {
@@ -28,20 +37,20 @@ fn plot_gain_phase() {
     const WIDTH: Range<f64> = 0.0..20_000.0;
 
     let passe_haut = FiltrePasseHaut::new(1.0, 1000.0, 10.0);
-    let ph_gpoints = passe_haut.gain_graph(N, WIDTH);
-    let ph_ppoints = passe_haut.phase_graph(N, WIDTH);
+    let ph_gpoints = passe_haut.gain_graph(N, &WIDTH);
+    let ph_ppoints = passe_haut.phase_graph(N, &WIDTH);
 
     let passe_bas = FiltrePasseBas::new(1.0, 1000.0, 10.0);
-    let pb_gpoints = passe_bas.gain_graph(N, WIDTH);
-    let pb_ppoints = passe_bas.phase_graph(N, WIDTH);
+    let pb_gpoints = passe_bas.gain_graph(N, &WIDTH);
+    let pb_ppoints = passe_bas.phase_graph(N, &WIDTH);
 
     let passe_bande = FiltrePasseBande::new(1.0, 1000.0, 10.0);
-    let pbd_gpoints = passe_bande.gain_graph(N, WIDTH);
-    let pbd_ppoints = passe_bande.phase_graph(N, WIDTH);
+    let pbd_gpoints = passe_bande.gain_graph(N, &WIDTH);
+    let pbd_ppoints = passe_bande.phase_graph(N, &WIDTH);
 
     let coupe_bande = FiltreRejecteur::new(1.0, 1000.0, 10.0);
-    let cb_gpoints = coupe_bande.gain_graph(N, WIDTH);
-    let cb_ppoints = coupe_bande.phase_graph(N, WIDTH);
+    let cb_gpoints = coupe_bande.gain_graph(N, &WIDTH);
+    let cb_ppoints = coupe_bande.phase_graph(N, &WIDTH);
 
     // gain
     draw_plot(
@@ -49,6 +58,7 @@ fn plot_gain_phase() {
         "gain passe haut",
         WIDTH,
         ("f", "gain"),
+        None,
         vec![&ph_gpoints],
     )
     .expect("Failed to plot");
@@ -57,6 +67,7 @@ fn plot_gain_phase() {
         "gain passe bas",
         WIDTH,
         ("f", "gain"),
+        None,
         vec![&pb_gpoints],
     )
     .expect("Failed to plot");
@@ -65,6 +76,7 @@ fn plot_gain_phase() {
         "gain passe bande",
         WIDTH,
         ("f", "gain"),
+        None,
         vec![&pbd_gpoints],
     )
     .expect("Failed to plot");
@@ -73,6 +85,7 @@ fn plot_gain_phase() {
         "gain coupe bande",
         WIDTH,
         ("f", "gain"),
+        None,
         vec![&cb_gpoints],
     )
     .expect("Failed to plot");
@@ -83,6 +96,7 @@ fn plot_gain_phase() {
         "phase passe haut",
         WIDTH,
         ("f", "phase"),
+        None,
         vec![&ph_ppoints],
     )
     .expect("Failed to plot");
@@ -91,6 +105,7 @@ fn plot_gain_phase() {
         "phase passe bas",
         WIDTH,
         ("f", "phase"),
+        None,
         vec![&pb_ppoints],
     )
     .expect("Failed to plot");
@@ -99,6 +114,7 @@ fn plot_gain_phase() {
         "phase passe bande",
         WIDTH,
         ("f", "phase"),
+        None,
         vec![&pbd_ppoints],
     )
     .expect("Failed to plot");
@@ -107,6 +123,7 @@ fn plot_gain_phase() {
         "phase coupe bande",
         WIDTH,
         ("f", "phase"),
+        None,
         vec![&cb_ppoints],
     )
     .expect("Failed to plot");
@@ -117,10 +134,13 @@ fn fft_triangle_test() {
     const WIDTH: Range<f64> = 0.0..10.0;
 
     let square = generate_triangle_wave(1.0, 0.0..1.0);
-    let points = evaluation_point(N, WIDTH, &square);
+    let points = evaluation_point(N, &WIDTH, &square);
 
     // compute fft
-    let fft_points = compute_fft(&points, WIDTH, true);
+    let FFTResult {
+        fft_amp: fft_points,
+        ..
+    } = compute_fft(&points, &WIDTH);
 
     // draw the datas
     draw_plot(
@@ -128,6 +148,7 @@ fn fft_triangle_test() {
         "Time input function",
         WIDTH,
         ("x", "y"),
+        None,
         vec![&points],
     )
     .expect("Failed to plot");
@@ -136,6 +157,7 @@ fn fft_triangle_test() {
         "Frequency response",
         0.0..100.0,
         ("frequency", "amplitude"),
+        None,
         vec![&fft_points],
     )
     .expect("Failed to plot");
@@ -146,10 +168,13 @@ fn fft_square_test() {
     const WIDTH: Range<f64> = 0.0..10.0;
 
     let square = generate_square_wave(5.0, 0.0..1.0);
-    let points = evaluation_point(N, WIDTH, &square);
+    let points = evaluation_point(N, &WIDTH, &square);
 
     // compute fft
-    let fft_points = compute_fft(&points, WIDTH, true);
+    let FFTResult {
+        fft_amp: fft_points,
+        ..
+    } = compute_fft(&points, &WIDTH);
 
     // draw the datas
     draw_plot(
@@ -157,6 +182,7 @@ fn fft_square_test() {
         "Time input function",
         WIDTH,
         ("x", "y"),
+        None,
         vec![&points],
     )
     .expect("Failed to plot");
@@ -165,6 +191,7 @@ fn fft_square_test() {
         "Frequency response",
         0.0..100.0,
         ("frequency", "amplitude"),
+        None,
         vec![&fft_points],
     )
     .expect("Failed to plot");
@@ -172,13 +199,18 @@ fn fft_square_test() {
 
 fn fft_basic_test() {
     const N: usize = 2_usize.pow(14) - 1;
-    const WIDTH: Range<f64> = 0.0..10.0;
+    const WIDTH: Range<f64> = 0.0..0.010;
 
-    let sin = generate_signals(vec![(2.0, 2.0), (0.5, 0.5), (1.0, 9.0)]);
-    let points = evaluation_point(N, WIDTH, &sin);
+    let sin = generate_signal(vec![(200.0, 1.0, 0.0), (1800.0, 1.0, -3.22)]);
+    let points = evaluation_point(N, &WIDTH, &sin);
 
     // compute fft
-    let fft_points = compute_fft(&points, WIDTH, true);
+    let FFTResult {
+        fft_amp: fft_points,
+        peaks,
+        ..
+    } = compute_fft(&points, &WIDTH);
+    println!("{peaks:?}");
 
     // draw the datas
     draw_plot(
@@ -186,14 +218,16 @@ fn fft_basic_test() {
         "Time input function",
         WIDTH,
         ("x", "y"),
+        None,
         vec![&points],
     )
     .expect("Failed to plot");
     draw_plot(
         "sin_fft_result.png",
         "Frequency response",
-        0.0..10.0,
+        0.0..2000.0,
         ("frequency", "amplitude"),
+        None,
         vec![&fft_points],
     )
     .expect("Failed to plot");

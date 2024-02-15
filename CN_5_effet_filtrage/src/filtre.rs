@@ -5,12 +5,29 @@ use crate::{
     utils::norm,
 };
 
+#[derive(Debug)]
+pub enum FiltreType {
+    PasseHaut,
+    PasseBas,
+    PasseBande,
+    CoupeBande,
+}
+
+pub struct FiltreCaracteristique {
+    pub filtre_type: FiltreType,
+    pub h0: f64,
+    pub omega0: f64,
+    pub q: f64,
+}
+
 pub trait FiltreTrait {
     fn new(h0: f64, f0: f64, q: f64) -> Self;
-    fn gain_graph(&self, n: usize, width: Range<f64>) -> XyScatter {
+    fn get_caracteristique(&self) -> FiltreCaracteristique;
+
+    fn gain_graph(&self, n: usize, width: &Range<f64>) -> XyScatter {
         evaluation_point(n, width, &Box::new(move |f| self.gain_at(f)))
     }
-    fn phase_graph(&self, n: usize, width: Range<f64>) -> XyScatter {
+    fn phase_graph(&self, n: usize, width: &Range<f64>) -> XyScatter {
         evaluation_point(n, width, &Box::new(move |f| self.phase_at(f)))
     }
 
@@ -31,6 +48,15 @@ impl FiltreTrait for FiltrePasseHaut {
             h0,
             omega0: 2.0 * PI * f0,
             q,
+        }
+    }
+
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::PasseHaut,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: self.q,
         }
     }
 
@@ -75,6 +101,15 @@ impl FiltreTrait for FiltrePasseBas {
             h0,
             omega0: 2.0 * PI * f0,
             q,
+        }
+    }
+
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::PasseBas,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: self.q,
         }
     }
 
@@ -124,6 +159,15 @@ impl FiltreTrait for FiltrePasseBande {
         }
     }
 
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::PasseBande,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: self.q,
+        }
+    }
+
     fn gain_at(&self, f: f64) -> f64 {
         let pulsation = 2.0 * PI * f;
         let x = pulsation / self.omega0;
@@ -159,6 +203,15 @@ impl FiltreTrait for FiltreRejecteur {
             h0,
             omega0: 2.0 * PI * f0,
             q,
+        }
+    }
+
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::CoupeBande,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: self.q,
         }
     }
 
