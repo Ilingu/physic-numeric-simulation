@@ -7,8 +7,10 @@ use crate::{
 
 #[derive(Debug)]
 pub enum FiltreType {
-    PasseHaut,
-    PasseBas,
+    PasseHaut2nd,
+    PasseBas2nd,
+    PasseHaut1er,
+    PasseBas1er,
     PasseBande,
     CoupeBande,
 }
@@ -35,14 +37,86 @@ pub trait FiltreTrait {
     fn phase_at(&self, f: f64) -> f64;
 }
 
-pub struct FiltrePasseHaut {
+pub struct FiltrePasseHaut1er {
+    h0: f64,
+    /// pulsation de coupure
+    omega0: f64,
+}
+
+impl FiltreTrait for FiltrePasseHaut1er {
+    fn new(h0: f64, f0: f64, _q: f64) -> Self {
+        Self {
+            h0,
+            omega0: 2.0 * PI * f0,
+        }
+    }
+
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::PasseHaut1er,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: -1.0,
+        }
+    }
+
+    fn gain_at(&self, f: f64) -> f64 {
+        let pulsation = 2.0 * PI * f;
+        let x = pulsation / self.omega0;
+        self.h0 / norm(1.0, 1.0 / x)
+    }
+
+    fn phase_at(&self, f: f64) -> f64 {
+        let pulsation = 2.0 * PI * f;
+        let x = pulsation / self.omega0;
+        (1.0 / x).atan()
+    }
+}
+
+pub struct FiltrePasseBas1er {
+    h0: f64,
+    /// pulsation de coupure
+    omega0: f64,
+}
+
+impl FiltreTrait for FiltrePasseBas1er {
+    fn new(h0: f64, f0: f64, _q: f64) -> Self {
+        Self {
+            h0,
+            omega0: 2.0 * PI * f0,
+        }
+    }
+
+    fn get_caracteristique(&self) -> FiltreCaracteristique {
+        FiltreCaracteristique {
+            filtre_type: FiltreType::PasseBas1er,
+            h0: self.h0,
+            omega0: self.omega0,
+            q: -1.0,
+        }
+    }
+
+    fn gain_at(&self, f: f64) -> f64 {
+        let pulsation = 2.0 * PI * f;
+        let x = pulsation / self.omega0;
+        self.h0 / norm(1.0, x)
+    }
+
+    fn phase_at(&self, f: f64) -> f64 {
+        let pulsation = 2.0 * PI * f;
+        let x = pulsation / self.omega0;
+        x.atan()
+    }
+}
+
+pub struct FiltrePasseHaut2nd {
     h0: f64,
     /// pulsation de coupure
     omega0: f64,
     q: f64,
 }
 
-impl FiltreTrait for FiltrePasseHaut {
+impl FiltreTrait for FiltrePasseHaut2nd {
     fn new(h0: f64, f0: f64, q: f64) -> Self {
         Self {
             h0,
@@ -53,7 +127,7 @@ impl FiltreTrait for FiltrePasseHaut {
 
     fn get_caracteristique(&self) -> FiltreCaracteristique {
         FiltreCaracteristique {
-            filtre_type: FiltreType::PasseHaut,
+            filtre_type: FiltreType::PasseHaut2nd,
             h0: self.h0,
             omega0: self.omega0,
             q: self.q,
@@ -89,13 +163,13 @@ impl FiltreTrait for FiltrePasseHaut {
     }
 }
 
-pub struct FiltrePasseBas {
+pub struct FiltrePasseBas2nd {
     h0: f64,
     /// pulsation de coupure
     omega0: f64,
     q: f64,
 }
-impl FiltreTrait for FiltrePasseBas {
+impl FiltreTrait for FiltrePasseBas2nd {
     fn new(h0: f64, f0: f64, q: f64) -> Self {
         Self {
             h0,
@@ -106,7 +180,7 @@ impl FiltreTrait for FiltrePasseBas {
 
     fn get_caracteristique(&self) -> FiltreCaracteristique {
         FiltreCaracteristique {
-            filtre_type: FiltreType::PasseBas,
+            filtre_type: FiltreType::PasseBas2nd,
             h0: self.h0,
             omega0: self.omega0,
             q: self.q,

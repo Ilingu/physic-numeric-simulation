@@ -23,12 +23,16 @@ pub fn generate_sinus(amp: f64, f: f64) -> Box<dyn Fn(f64) -> f64> {
 }
 
 /// signals: Vec<(frequency, amplitude, initial phase)>
-pub fn generate_signal(signal_info: Vec<(f64, f64, f64)>) -> Box<dyn Fn(f64) -> f64> {
+pub fn generate_signal(
+    signal_info: Vec<(f64, f64, f64)>,
+    offset: Option<f64>,
+) -> Box<dyn Fn(f64) -> f64> {
     Box::new(move |x| {
         signal_info
             .iter()
             .map(|(f, amp, phase)| amp * (2.0 * PI * f * x + phase).sin())
             .sum::<f64>()
+            + offset.unwrap_or(0.0)
     })
 }
 
@@ -36,9 +40,9 @@ pub fn generate_square_wave(f: f64, minmax: Range<f64>) -> Box<dyn Fn(f64) -> f6
     let period = 1.0 / f;
     Box::new(move |x| {
         if x % period < period / 2.0 {
-            minmax.start
-        } else {
             minmax.end
+        } else {
+            minmax.start
         }
     })
 }
@@ -62,14 +66,10 @@ fn extract_peaks(fft_points: &XyScatter) -> Vec<(usize, (f64, f64))> {
     let peaks = fp.find_peaks();
     peaks
         .into_iter()
-        .filter_map(|p| {
+        .map(|p| {
             let i = p.middle_position();
             let fftp = fft_points[i];
-            if fftp.1 < 1e-3 {
-                None
-            } else {
-                Some((i, fftp))
-            }
+            (i, fftp)
         })
         .collect()
 }
