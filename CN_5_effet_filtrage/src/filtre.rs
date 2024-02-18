@@ -1,4 +1,7 @@
-use std::{f64::consts::PI, ops::Range};
+use std::{
+    f64::{consts::PI, NAN},
+    ops::Range,
+};
 
 use crate::{
     fft::{evaluation_point, XyScatter},
@@ -56,7 +59,7 @@ impl FiltreTrait for FiltrePasseHaut1er {
             filtre_type: FiltreType::PasseHaut1er,
             h0: self.h0,
             omega0: self.omega0,
-            q: -1.0,
+            q: NAN,
         }
     }
 
@@ -92,7 +95,7 @@ impl FiltreTrait for FiltrePasseBas1er {
             filtre_type: FiltreType::PasseBas1er,
             h0: self.h0,
             omega0: self.omega0,
-            q: -1.0,
+            q: NAN,
         }
     }
 
@@ -105,7 +108,7 @@ impl FiltreTrait for FiltrePasseBas1er {
     fn phase_at(&self, f: f64) -> f64 {
         let pulsation = 2.0 * PI * f;
         let x = pulsation / self.omega0;
-        x.atan()
+        -x.atan()
     }
 }
 

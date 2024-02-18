@@ -19,49 +19,39 @@ use crate::{
     fft::{compute_fft, evaluation_point, generate_signal, generate_triangle_wave, FFTResult},
     filtrage::draw_filtrage,
     filtre::{
-        FiltrePasseBande, FiltrePasseBas2nd, FiltrePasseHaut2nd, FiltreRejecteur, FiltreTrait,
+        FiltrePasseBande, FiltrePasseBas1er, FiltrePasseBas2nd, FiltrePasseHaut1er,
+        FiltrePasseHaut2nd, FiltreRejecteur, FiltreTrait,
     },
-    plot::draw_plot,
+    plot::{draw_fft, draw_plot},
 };
 
 fn main() {
+    filtrage_square_wave()
+}
+
+fn filtrage_triangle_wave() {
     const N: usize = 2_usize.pow(14) - 1;
     const WIDTH: Range<f64> = 0.0..0.002;
-    let in_signal = generate_square_wave(1000.0, -2.0..4.0);
-    let filtre = FiltreRejecteur::new(1.0, 25.0 * 1000.0, 20.0);
-    let report = filtrage(&in_signal, &filtre, N, &WIDTH, &(0.0..50_000.0), Some(1.0));
+    let in_signal = generate_triangle_wave(1000.0, 0.0..2.0);
+    let filtre = FiltrePasseBande::new(1.0, 25.0 * 1000.0, 0.2);
+    let report = filtrage(&in_signal, &filtre, N, &WIDTH, &(0.0..50_000.0), None);
     draw_filtrage(&report);
 }
 
-fn test_square_from_fft() {
+fn filtrage_square_wave() {
     const N: usize = 2_usize.pow(14) - 1;
     const WIDTH: Range<f64> = 0.0..0.002;
-    let signal = generate_square_wave(1000.0, -2.0..4.0);
-    let signal_in = evaluation_point(N, &WIDTH, &signal);
-    let FFTResult { peaks, .. } = compute_fft(&signal_in, &WIDTH);
-
-    let signal_out_func = generate_signal(
-        peaks.into_iter().map(|(f, amp)| (f, amp, 0.0)).collect(),
-        None,
-    );
-    let signal_out = evaluation_point(N, &WIDTH, &signal_out_func);
-
-    draw_plot(
-        "square_from_fft.png",
-        "test square from fft",
-        WIDTH,
-        ("t (s)", ""),
-        None,
-        vec![&signal_in, &signal_out],
-    )
-    .expect("Failed to plot");
+    let in_signal = generate_square_wave(1000.0, -2.0..4.0);
+    let filtre = FiltreRejecteur::new(1.0, 0.04 * 1000.0, 20.0);
+    let report = filtrage(&in_signal, &filtre, N, &WIDTH, &(0.0..50_000.0), Some(1.0));
+    draw_filtrage(&report);
 }
 
 fn filtrage_sinus_signal() {
     const N: usize = 2_usize.pow(14) - 1;
     const WIDTH: Range<f64> = 0.0..0.010;
     let in_signal = generate_signal(vec![(200.0, 1.0, 0.0), (1800.0, 1.0, 0.0)], None);
-    let coupe_bande = FiltreRejecteur::new(1.0, 200.0, 0.2);
+    let coupe_bande = FiltrePasseBande::new(1.0, 200.0, 20.0);
     let report = filtrage(&in_signal, &coupe_bande, N, &WIDTH, &(0.0..2000.0), None);
     draw_filtrage(&report);
 }
@@ -94,6 +84,7 @@ fn plot_gain_phase() {
         ("f", "gain"),
         None,
         vec![&ph_gpoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -103,6 +94,7 @@ fn plot_gain_phase() {
         ("f", "gain"),
         None,
         vec![&pb_gpoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -112,6 +104,7 @@ fn plot_gain_phase() {
         ("f", "gain"),
         None,
         vec![&pbd_gpoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -121,6 +114,7 @@ fn plot_gain_phase() {
         ("f", "gain"),
         None,
         vec![&cb_gpoints],
+        None,
     )
     .expect("Failed to plot");
 
@@ -132,6 +126,7 @@ fn plot_gain_phase() {
         ("f", "phase"),
         None,
         vec![&ph_ppoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -141,6 +136,7 @@ fn plot_gain_phase() {
         ("f", "phase"),
         None,
         vec![&pb_ppoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -150,6 +146,7 @@ fn plot_gain_phase() {
         ("f", "phase"),
         None,
         vec![&pbd_ppoints],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -159,6 +156,7 @@ fn plot_gain_phase() {
         ("f", "phase"),
         None,
         vec![&cb_ppoints],
+        None,
     )
     .expect("Failed to plot");
 }
@@ -171,10 +169,7 @@ fn fft_triangle_test() {
     let points = evaluation_point(N, &WIDTH, &square);
 
     // compute fft
-    let FFTResult {
-        fft_amp: fft_points,
-        ..
-    } = compute_fft(&points, &WIDTH);
+    let FFTResult { peaks, .. } = compute_fft(&points, &WIDTH);
 
     // draw the datas
     draw_plot(
@@ -184,15 +179,14 @@ fn fft_triangle_test() {
         ("x", "y"),
         None,
         vec![&points],
+        None,
     )
     .expect("Failed to plot");
-    draw_plot(
+    draw_fft(
         "triangle_fft_result.png",
         "Frequency response",
         0.0..100.0,
-        ("frequency", "amplitude"),
-        None,
-        vec![&fft_points],
+        &peaks,
     )
     .expect("Failed to plot");
 }
@@ -205,10 +199,7 @@ fn fft_square_test() {
     let points = evaluation_point(N, &WIDTH, &square);
 
     // compute fft
-    let FFTResult {
-        fft_amp: fft_points,
-        ..
-    } = compute_fft(&points, &WIDTH);
+    let FFTResult { peaks, .. } = compute_fft(&points, &WIDTH);
 
     // draw the datas
     draw_plot(
@@ -218,15 +209,14 @@ fn fft_square_test() {
         ("x", "y"),
         None,
         vec![&points],
+        None,
     )
     .expect("Failed to plot");
-    draw_plot(
+    draw_fft(
         "square_fft_result.png",
         "Frequency response",
         0.0..100.0,
-        ("frequency", "amplitude"),
-        None,
-        vec![&fft_points],
+        &peaks,
     )
     .expect("Failed to plot");
 }
@@ -239,12 +229,7 @@ fn fft_basic_test() {
     let points = evaluation_point(N, &WIDTH, &sin);
 
     // compute fft
-    let FFTResult {
-        fft_amp: fft_points,
-        peaks,
-        ..
-    } = compute_fft(&points, &WIDTH);
-    println!("{peaks:?}");
+    let FFTResult { peaks, .. } = compute_fft(&points, &WIDTH);
 
     // draw the datas
     draw_plot(
@@ -254,15 +239,14 @@ fn fft_basic_test() {
         ("x", "y"),
         None,
         vec![&points],
+        None,
     )
     .expect("Failed to plot");
-    draw_plot(
+    draw_fft(
         "sin_fft_result.png",
         "Frequency response",
         0.0..2000.0,
-        ("frequency", "amplitude"),
-        None,
-        vec![&fft_points],
+        &peaks,
     )
     .expect("Failed to plot");
 }

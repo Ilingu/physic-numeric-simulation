@@ -27,6 +27,7 @@ pub fn draw_fft(
         ("frequency", "amplitude"),
         Some((600, 300)),
         vec![&fft_points_to_vertical_lines(peaks)],
+        None,
     )
 }
 
@@ -37,8 +38,16 @@ pub fn draw_plot(
     (legend_x, legend_y): (&str, &str),
     size: Option<(u32, u32)>,
     lines: Vec<&XyScatter>,
+    lines_legend: Option<Vec<&str>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert!(lines.len() <= 7);
+    let (is_line_legend, lines_legend) = match lines_legend {
+        Some(ll) => {
+            assert_eq!(lines.len(), ll.len(), "each lines must have a legend");
+            (true, ll)
+        }
+        None => (false, vec![]),
+    };
 
     let (mut max_y, mut min_y) = (None::<f64>, None::<f64>);
     for datas in &lines {
@@ -85,11 +94,24 @@ pub fn draw_plot(
         .draw()?;
 
     const COLORS: [RGBColor; 7] = [RED, BLUE, GREEN, BLACK, YELLOW, CYAN, MAGENTA];
-    for (i, datas) in lines.iter().enumerate() {
-        chart.draw_series(LineSeries::new(
+    for (i, datas) in lines.into_iter().enumerate() {
+        let serie = chart.draw_series(LineSeries::new(
             datas.iter().map(|&(x, y)| (x, y)),
             &COLORS[i],
         ))?;
+        if is_line_legend {
+            serie
+                .label(lines_legend[i])
+                .legend(move |(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], COLORS[i]));
+        }
+    }
+
+    if is_line_legend {
+        chart
+            .configure_series_labels()
+            .background_style(WHITE.mix(0.8))
+            .border_style(BLACK)
+            .draw()?;
     }
 
     root.present()?;

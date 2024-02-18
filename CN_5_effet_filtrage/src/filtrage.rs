@@ -71,6 +71,7 @@ pub fn draw_filtrage(report: &FiltrageReport) {
         ("t (s)", ""),
         None,
         vec![&report.signal_input, &report.signal_ouput],
+        Some(vec!["Entrée", "Sortie"]),
     )
     .expect("Failed to plot");
     draw_fft(
@@ -82,7 +83,12 @@ pub fn draw_filtrage(report: &FiltrageReport) {
     .expect("Failed to plot");
     draw_fft(
         "filtrage/fft_out.png",
-        "Spectre signal de sortie",
+        &format!(
+            "Spectre signal de sortie du filtre {:?} avec f0={}Hz Q={}",
+            report.filtre_caracteristique.filtre_type,
+            (report.filtre_caracteristique.omega0 / (2.0 * PI)).round(),
+            report.filtre_caracteristique.q,
+        ),
         report.width_frequence.clone(),
         &report.fft_output,
     )
@@ -99,6 +105,7 @@ pub fn draw_filtrage(report: &FiltrageReport) {
         ("frequency", "gain"),
         Some((600, 300)),
         vec![&report.gain_graph],
+        None,
     )
     .expect("Failed to plot");
     draw_plot(
@@ -113,6 +120,7 @@ pub fn draw_filtrage(report: &FiltrageReport) {
         ("frequency", "phase"),
         Some((600, 300)),
         vec![&report.phase_graph],
+        None,
     )
     .expect("Failed to plot");
 }
