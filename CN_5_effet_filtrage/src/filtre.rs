@@ -151,9 +151,9 @@ impl FiltreTrait for FiltrePasseHaut2nd {
             unreachable!("Arg(0) is not defined")
         };
         let phic = if pulsation < self.omega0 {
-            -(x * (1.0 / self.q) / (1.0 - x)).atan()
+            -(x * (1.0 / self.q) / (1.0 - x.powi(2))).atan()
         } else if pulsation > self.omega0 {
-            -PI - (x * (1.0 / self.q) / (1.0 - x)).atan()
+            -PI - (x * (1.0 / self.q) / (1.0 - x.powi(2))).atan()
         } else if pulsation == self.omega0 {
             -PI / 2.0
         } else {
@@ -197,9 +197,9 @@ impl FiltreTrait for FiltrePasseBas2nd {
         let pulsation = 2.0 * PI * f;
         let x = pulsation / self.omega0;
         if pulsation < self.omega0 {
-            -(x * (1.0 / self.q) / (1.0 - x)).atan()
+            -(x * (1.0 / self.q) / (1.0 - x.powi(2))).atan()
         } else if pulsation > self.omega0 {
-            -PI - (x * (1.0 / self.q) / (1.0 - x)).atan()
+            -PI - (x * (1.0 / self.q) / (1.0 - x.powi(2))).atan()
         } else if pulsation == self.omega0 {
             -PI / 2.0
         } else {
@@ -298,10 +298,8 @@ impl FiltreTrait for FiltreRejecteur {
     fn phase_at(&self, f: f64) -> f64 {
         let pulsation = 2.0 * PI * f;
         let x = pulsation / self.omega0;
-        if pulsation < self.omega0 {
-            -(x * (1.0 / self.q) / (1.0 - x)).atan()
-        } else if pulsation > self.omega0 {
-            -PI - (x * (1.0 / self.q) / (1.0 - x)).atan()
+        if pulsation != self.omega0 {
+            -(x * (1.0 / self.q) / (1.0 - x.powi(2))).atan()
         } else if pulsation == self.omega0 {
             -PI / 2.0
         } else {

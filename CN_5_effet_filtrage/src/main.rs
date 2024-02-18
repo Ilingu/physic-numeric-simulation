@@ -28,16 +28,8 @@ fn main() {
     const N: usize = 2_usize.pow(14) - 1;
     const WIDTH: Range<f64> = 0.0..0.002;
     let in_signal = generate_square_wave(1000.0, -2.0..4.0);
-    let filtre = FiltreRejecteur::new(1.0, 1.0 * 1000.0, 0.2);
-    let report = filtrage(
-        &in_signal,
-        &filtre,
-        N,
-        &WIDTH,
-        &(0.0..20_000.0),
-        false,
-        Some(1.0),
-    );
+    let filtre = FiltreRejecteur::new(1.0, 25.0 * 1000.0, 20.0);
+    let report = filtrage(&in_signal, &filtre, N, &WIDTH, &(0.0..50_000.0), Some(1.0));
     draw_filtrage(&report);
 }
 
@@ -49,10 +41,7 @@ fn test_square_from_fft() {
     let FFTResult { peaks, .. } = compute_fft(&signal_in, &WIDTH);
 
     let signal_out_func = generate_signal(
-        peaks
-            .into_iter()
-            .map(|(_, (f, amp))| (f, amp, 0.0))
-            .collect(),
+        peaks.into_iter().map(|(f, amp)| (f, amp, 0.0)).collect(),
         None,
     );
     let signal_out = evaluation_point(N, &WIDTH, &signal_out_func);
@@ -73,21 +62,13 @@ fn filtrage_sinus_signal() {
     const WIDTH: Range<f64> = 0.0..0.010;
     let in_signal = generate_signal(vec![(200.0, 1.0, 0.0), (1800.0, 1.0, 0.0)], None);
     let coupe_bande = FiltreRejecteur::new(1.0, 200.0, 0.2);
-    let report = filtrage(
-        &in_signal,
-        &coupe_bande,
-        N,
-        &WIDTH,
-        &(0.0..2000.0),
-        true,
-        None,
-    );
+    let report = filtrage(&in_signal, &coupe_bande, N, &WIDTH, &(0.0..2000.0), None);
     draw_filtrage(&report);
 }
 
 fn plot_gain_phase() {
     const N: usize = 5000;
-    const WIDTH: Range<f64> = 0.0..20_000.0;
+    const WIDTH: Range<f64> = 0.0..5_000.0;
 
     let passe_haut = FiltrePasseHaut2nd::new(1.0, 1000.0, 10.0);
     let ph_gpoints = passe_haut.gain_graph(N, &WIDTH);

@@ -59,7 +59,8 @@ pub fn generate_triangle_wave(f: f64, minmax: Range<f64>) -> Box<dyn Fn(f64) -> 
     })
 }
 
-fn extract_peaks(fft_points: &XyScatter) -> Vec<(usize, (f64, f64))> {
+/// returns: (index_in_original_array, (f, amp))
+fn extract_peaks(fft_points: &XyScatter) -> XyScatter {
     let only_amp = fft_points.iter().map(|(_, y)| *y).collect::<Vec<f64>>();
     let fp = PeakFinder::new(&only_amp);
 
@@ -69,15 +70,17 @@ fn extract_peaks(fft_points: &XyScatter) -> Vec<(usize, (f64, f64))> {
         .map(|p| {
             let i = p.middle_position();
             let fftp = fft_points[i];
-            (i, fftp)
+            fftp
         })
         .collect()
 }
 
 pub struct FFTResult {
+    /// raw data, see peaks for postprocessed datas
     pub fft_amp: XyScatter,
     pub fft_phase: XyScatter,
-    pub peaks: Vec<(usize, (f64, f64))>,
+    /// "real" fft result: Vec<(f, amp)>
+    pub peaks: XyScatter,
 }
 
 pub fn compute_fft(points: &XyScatter, width: &Range<f64>) -> FFTResult {
@@ -114,19 +117,8 @@ pub fn compute_fft(points: &XyScatter, width: &Range<f64>) -> FFTResult {
         .collect::<XyScatter>();
 
     let peaks_amp = extract_peaks(&fft_amp);
-    let unnoised_amp = fft_amp
-        .iter()
-        .map(|(x, y)| {
-            if peaks_amp.iter().any(|(_, (f, amp))| (f, amp) == (x, y)) {
-                (*x, *y)
-            } else {
-                (*x, 0.0)
-            }
-        })
-        .collect::<XyScatter>();
-
     FFTResult {
-        fft_amp: unnoised_amp,
+        fft_amp,
         fft_phase,
         peaks: peaks_amp,
     }

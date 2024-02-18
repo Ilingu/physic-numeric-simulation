@@ -4,6 +4,32 @@ use plotters::prelude::*;
 
 use crate::fft::XyScatter;
 
+fn fft_points_to_vertical_lines(fft_points: &XyScatter) -> XyScatter {
+    let mut out: XyScatter = vec![];
+    for &(f, amp) in fft_points {
+        out.push((f, 0.0));
+        out.push((f, amp));
+        out.push((f, 0.0));
+    }
+    out
+}
+
+pub fn draw_fft(
+    filename: &str,
+    caption: &str,
+    width: Range<f64>,
+    peaks: &XyScatter,
+) -> Result<(), Box<dyn std::error::Error>> {
+    draw_plot(
+        filename,
+        caption,
+        width,
+        ("frequency", "amplitude"),
+        Some((600, 300)),
+        vec![&fft_points_to_vertical_lines(peaks)],
+    )
+}
+
 pub fn draw_plot(
     filename: &str,
     caption: &str,
@@ -48,8 +74,8 @@ pub fn draw_plot(
         .x_label_area_size(30)
         .y_label_area_size(30)
         .build_cartesian_2d(
-            (width.start as f32)..(width.end as f32),
-            (min_y.unwrap().floor() as f32)..(max_y.unwrap().ceil() as f32),
+            (width.start)..(width.end),
+            (min_y.unwrap().floor())..(max_y.unwrap().ceil()),
         )?;
 
     chart
@@ -58,10 +84,10 @@ pub fn draw_plot(
         .y_desc(legend_y)
         .draw()?;
 
-    const COLORS: [RGBColor; 7] = [RED, GREEN, BLACK, BLUE, YELLOW, CYAN, MAGENTA];
+    const COLORS: [RGBColor; 7] = [RED, BLUE, GREEN, BLACK, YELLOW, CYAN, MAGENTA];
     for (i, datas) in lines.iter().enumerate() {
         chart.draw_series(LineSeries::new(
-            datas.iter().map(|&(x, y)| (x as f32, y as f32)),
+            datas.iter().map(|&(x, y)| (x, y)),
             &COLORS[i],
         ))?;
     }
