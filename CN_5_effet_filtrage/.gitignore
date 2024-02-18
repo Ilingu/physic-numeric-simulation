@@ -1,1 +1,9 @@
 target
+*.aux
+*.log
+*.fls
+*.pdf
+*.gz
+*.fdb_latexmk
+*.synctex(busy)
+/out
