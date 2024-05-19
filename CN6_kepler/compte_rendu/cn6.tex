@@ -57,14 +57,14 @@
 Chollet Arthur
 
 \begin{center}
-    \Huge
-    \normalfont\calligra Compte rendu capacité numérique
+  \Huge
+  \normalfont\calligra Compte-rendu de capacité numérique
 \end{center}
 
 \expart{6.1 Vérification de la deuxième loi de Kepler}
 
 \question{1}{
-  En identifiant les coordonnées polaire avec: $\boldsymbol{r}$: l'altitude+$R_T$, $\boldsymbol{\theta}$: la longitude et $\boldsymbol{\varphi}$: la latitude. On obtient que:
+  En identifiant les coordonnées sphériques avec: $\boldsymbol{r}$: l'altitude + $R_T$, $\boldsymbol{\theta}$: la longitude et $\boldsymbol{\varphi}$: la latitude. On obtient que:
   $$
   \boxed{\begin{cases}
     x=r\sin\theta\cos\varphi\\
@@ -75,13 +75,13 @@ Chollet Arthur
 }
 
 \question{2}{
-  La méthode de dérivation utilisé est:
+  La méthode de dérivation utilisée est:
   \begin{itemize}
     \item pour le 1er élément:
     $$
       v=\frac{OM_1-OM_0}{t_{1}-t_{0}}
     $$
-    \item pour les éléments centraux (meilleur approximation):
+    \item pour les éléments centraux (meilleure approximation):
     $$
       v=\frac{OM_{i+1}-OM_{i-1}}{t_{i+1}-t_{i-1}}
     $$
@@ -89,22 +89,22 @@ Chollet Arthur
     $$
       v=\frac{OM_{i}-OM_{i-1}}{t_{i}-t_{i-1}}
     $$
-  \end{itemize}
+\end{itemize}
 }
 
 \question{3}{
-  \begin{figure}[H]
-    \centering
-    \includegraphics[width=50mm]{img/radius.png}
-    \includegraphics[width=50mm]{img/velocity.png}
-    \includegraphics[width=50mm]{img/areal_velocity.png}
-    \caption{Tracé du rayon (orange), de la vitesse (bleu) et de la vitesse aréolaire (violet) en fonction du temps}
-  \end{figure}
-  À noter que pour la vitesse le premier et dernier point ne sont pas cohérent au vu de la méthode de dérivation spécial utilisé.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=50mm]{img/radius.png}
+  \includegraphics[width=50mm]{img/velocity.png}
+  \includegraphics[width=50mm]{img/areal_velocity.png}
+  \caption{Tracé du rayon (orange), de la vitesse (bleu) et de la vitesse aréolaire (violet) en fonction du temps}
+\end{figure}
+À noter que pour la vitesse, le premier et le dernier point ne sont pas cohérents au vu de la méthode de dérivation spéciale utilisée.
 }
 
 \question{4}{
-  La deuxième loi de Kepler nous dit que pour un intervalle de temps égale, l'aire parcouru par le satellite est constant, dans nos données nous avions trois régime d'intervalle de temps différents de -2min à 14min avec un intervalle de 2min, de 14min à 31min avec un intervalle de 1.5min puis de 31min à 33min avec un intervalle de 1min. On identifie sur la courbe de la question 3 des courbes constantea (au vue de l'ordre de grandeurs et de l'échelle) pour chacuns de ces intervalles (les variations étant dût aux transitions d'intervalles). On conclut ainsi que \underline{la deuxième loi de Kepler est vérifié}.
+  La deuxième loi de Kepler nous dit que pour un intervalle de temps égal, l'aire parcourue par le satellite est constante. Dans nos données, nous avions trois régimes d'intervalles de temps différents : de -2 min à 14 min avec un intervalle de 2 min, de 14 min à 31 min avec un intervalle de 1,5 min, puis de 31 min à 33 min avec un intervalle de 1 min. On identifie sur la courbe de la question 3 des courbes constantes (au vu de l'ordre de grandeurs et de l'échelle) pour chacun de ces intervalles (les variations étant dues aux transitions d'intervalles). On conclut ainsi que \underline{la deuxième loi de Kepler est vérifiée}.
 }
 
 \expart{6.2 Vérification de la troisième loi de Kepler}
@@ -120,10 +120,10 @@ Chollet Arthur
     \includegraphics[width=50mm]{img/third_law.png}
     \caption{Tracé de $a^3$ en fonction de $T^2$}
   \end{figure}
-  On identifie ainsi un fonction affine, et par regression linéaire sur les données obtenue: $a^3=1,366.10^{25}\times T^2+b$ (avec $b\ll10^{25}$).
+  On identifie ainsi une fonction affine, et par régression linéaire sur les données obtenues : $a^3=1,366.10^{25}\times T^2+b$ (avec $b\ll10^{25}$).
 
   On conclut ainsi que 
-  $$\boxed{\frac{a^3}{T^2}=(1.366\pm0.058).10^{25} m^3s^{-2}=\text{constante}}$$  ce qui valide la troisième loi de kepler pour Sagittarius $A^*$
+  $$\boxed{\frac{a^3}{T^2}=(1.366\pm0.058).10^{25} m^3s^{-2}=\text{constante}}$$  ce qui valide la troisième loi de Kepler pour Sagittarius $A^*$
 }
 
 \question{2}{
@@ -144,7 +144,7 @@ Chollet Arthur
     z=\frac{\abs*{M_{TN}-M_{TN,tab}}}{\sigma}=\frac{8.2541-8.08}{0.37}=0.47 < 2
   $$
 
-  Le \underline{z-score est inférieur à 2}, on conclut donc que nos mesure sont cohérentes.
+  Le \underline{z-score est inférieur à 2}, on conclut donc que nos mesures sont cohérentes.
 }
 
 \end{document}
