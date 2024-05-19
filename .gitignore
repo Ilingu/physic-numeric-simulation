@@ -1,1 +1,8 @@
 *.pdf
+zig-cache
+zig-out
+*.aux
+*.fls
+*.log
+*.fdb_latexmk
+*.synctex.gz
